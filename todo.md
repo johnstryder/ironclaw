@@ -269,7 +269,7 @@ Planning, sub-agents, skill ecosystem, integrations.
   [] Fully Tested
 
 
-- [] Smart home IoT device control  
+- [x] Smart home IoT device control  
   **Agent Instruction:** Integrate `eclipse/paho.mqtt.golang` for MQTT support or specific Hue/HomeAssistant APIs. Create a generic `IoTTool` that allows the agent to publish messages to specific topics or call HTTP endpoints on a local Home Assistant instance.  
   **Manual test:** Link a supported IoT protocol or hub; send a command (e.g. "turn off living room light"). Confirm the device state changes as requested.
   [] Fully Tested
