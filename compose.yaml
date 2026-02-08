@@ -1,0 +1,9 @@
+services:
+  ironclaw:
+    image: ironclaw
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./ironclaw.json:/app/ironclaw.json
+    restart: unless-stopped

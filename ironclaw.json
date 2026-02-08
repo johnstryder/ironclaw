@@ -1,0 +1,25 @@
+{
+  "gateway": {
+    "port": 8080,
+    "auth": {
+      "mode": "none",
+      "requirePinForExternal": false,
+      "externalChannels": [],
+      "rateLimitMaxAttempts": 5
+    },
+    "allowedHosts": []
+  },
+  "agents": {
+    "defaultModel": "gpt-4o",
+    "modelAliases": {},
+    "paths": {
+      "root": "agents",
+      "memory": "memory"
+    }
+  },
+  "infra": {
+    "logFormat": "text",
+    "logLevel": "info"
+  },
+  "allowedCommands": ["ls"]
+}

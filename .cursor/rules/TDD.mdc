@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# Testing Strategy: TDD for AI Agents
+
+**Core Philosophy:** "Mock the Brain, Test the Body."
+* **Never** unit test the LLM's intelligence (it is non-deterministic).
+* **Always** unit test your code's handling of the LLM's output (JSON parsing, tool routing).
+
+## 1. The Architecture (Interfaces)
+Create `domain/interfaces.go` to decouple your logic from Anthropic/OpenAI.
+
+```go
+package domain
+
+import "context"
+
+// LLM: The interface you mock in TDD
+type LLM interface {
+    Generate(ctx context.Context, prompt string) (string, error)
+}
+
+// Tool: The interface you implement
+type Tool interface {
+    Name() string
+    Execute(input string) (string, error)
+}

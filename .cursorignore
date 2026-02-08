@@ -1,0 +1,45 @@
+# --- Go Specific ---
+bin/
+obj/
+vendor/
+# Ignore compiled binaries (common Go names)
+openclaw
+openclaw-agent
+*.exe
+*.test
+*.prof
+
+# --- Cursor & Agent Artifacts ---
+.cursor/
+# Ignore massive memory/log files if OpenClaw writes them locally
+logs/
+*.log
+memory.md
+steps.md
+
+# --- Web/Frontend (if applicable to your rewrite) ---
+node_modules/
+.next/
+dist/
+build/
+out/
+
+# --- System & Misc ---
+.git/
+.svn/
+.DS_Store
+*.tmp
+*.bak
+.env
+.env.*
+!.env.example
+
+# --- Large Assets ---
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.zip
+*.tar.gz
