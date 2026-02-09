@@ -318,3 +318,114 @@ Agentic execution loop, DAG conversation history, Edit tool, channel-based strea
   **Agent Instruction:** Define a `SandboxWrapper` interface in `internal/tooling/sandbox.go` with `Wrap(cmd *exec.Cmd) *exec.Cmd`. Implement `DockerWrapper` (existing sandbox), `ChrootWrapper` (uses `syscall.Chroot` or launches via `chroot` binary), and `NoopWrapper` (passthrough). The `ShellTool` accepts a `SandboxWrapper` at construction time. `ChrootWrapper` sets `cmd.SysProcAttr.Chroot` to a configured jail directory on Linux; on other platforms it returns an error.  
   **Manual test:** Configure the chroot jail path to a minimal directory (e.g. `/tmp/jail` with `/bin/sh` copied in). Run a command through the chroot wrapper; confirm it executes inside the jail (e.g. `ls /` shows only jail contents). Attempt to access files outside the jail; confirm access is denied.
   [] Fully Tested
+
+---
+
+### 12. Complete OpenClaw CLI Functionality Implementation
+
+Based on the OpenClaw CLI documentation at https://docs.openclaw.ai/cli, implement all CLI commands with proper subcommands, flags, and functionality:
+
+- [] **Setup and Onboarding Commands**
+  - `setup` - Initialize config + workspace with options (--workspace, --wizard, --non-interactive, --mode, --remote-url, --remote-token)
+  - `onboard` - Interactive wizard for gateway, workspace, and skills setup with comprehensive auth options
+  - `configure` - Interactive configuration wizard for models, channels, skills, gateway
+  - `config` - Non-interactive config helpers (get/set/unset) with dot/bracket path support
+  - `doctor` - Health checks and quick fixes with options (--no-workspace-suggestions, --yes, --non-interactive, --deep)
+
+- [] **Channel and Messaging Commands**
+  - `channels` - Manage chat channel accounts (WhatsApp/Telegram/Discord/Google Chat/Slack/Mattermost/Signal/iMessage/MS Teams)
+    - Subcommands: list, status, logs, add, remove, login, logout
+    - Support for --channel, --account, --name flags
+  - `message` - Unified outbound messaging + channel actions
+    - Subcommands: send, poll, react, reactions, read, edit, delete, pin, unpin, pins, permissions, search, timeout, kick, ban
+    - Thread management: thread create|list|reply
+    - Emoji/sticker management, role management, voice status, event management
+  - `pairing` - Approve DM pairing requests across channels
+    - Subcommands: list, approve
+  - `webhooks gmail` - Gmail Pub/Sub hook setup + runner
+    - Subcommands: setup, run
+
+- [] **Agent Management Commands**
+  - `agent` - Run one agent turn via Gateway or --local embedded
+    - Options: --message, --to, --session-id, --thinking, --verbose, --channel, --local, --deliver, --json, --timeout
+  - `agents` - Manage isolated agents (workspaces + auth + routing)
+    - Subcommands: list, add, delete
+    - Support for --workspace, --model, --agent-dir, --bind, --non-interactive, --json, --force
+  - `acp` - Run ACP bridge connecting IDEs to Gateway
+
+- [] **Model and AI Provider Commands**
+  - `models` - Comprehensive model management
+    - Subcommands: list, status, set, set-image
+    - Aliases management: aliases list|add|remove
+    - Fallbacks: fallbacks list|add|remove|clear, image-fallbacks list|add|remove|clear
+    - Scanning: scan with various options
+    - Auth management: auth add|setup-token|paste-token, auth order get|set|clear
+
+- [] **System and Gateway Commands**
+  - `gateway` - Run WebSocket Gateway with comprehensive options
+    - Service management: gateway service (status, install, uninstall, start, stop, restart)
+    - RPC helpers: gateway call, health, status, probe, discover, install, uninstall, start, stop, restart, run
+  - `system` - System management
+    - Subcommands: event, heartbeat (last|enable|disable), presence
+  - `logs` - Tail Gateway file logs via RPC with options (--follow, --limit, --plain, --json, --no-color)
+
+- [] **Memory and Storage Commands**
+  - `memory` - Vector search over MEMORY.md + memory/*.md
+    - Subcommands: status, index, search
+  - `sessions` - List stored conversation sessions
+    - Options: --json, --verbose, --store, --active
+
+- [] **Status and Health Commands**
+  - `status` - Show linked session health and recent recipients
+    - Options: --json, --all, --deep, --usage, --timeout, --verbose, --debug
+  - `health` - Fetch health from running Gateway
+    - Options: --json, --timeout, --verbose
+
+- [] **Utility and Maintenance Commands**
+  - `reset` - Reset local config/state (keeps CLI installed)
+    - Options: --scope, --yes, --non-interactive, --dry-run
+  - `uninstall` - Uninstall gateway service + local data (CLI remains)
+    - Options: --service, --state, --workspace, --app, --all, --yes, --non-interactive, --dry-run
+  - `update` - Update the CLI (source installs only)
+  - `sandbox` - Sandbox management commands
+  - `tui` - Terminal UI interface
+  - `browser` - Browser automation commands
+    - Subcommands: status, start, stop, reset-profile, tabs, open, focus, close, profiles, create-profile, delete-profile, screenshot, snapshot, navigate, resize, click, type, press, hover, drag, select, upload, fill, dialog, wait, evaluate, console, pdf
+  - `cron` - Cron job management
+    - Subcommands: status, list, add, edit, rm, enable, disable, run
+  - `nodes` - Node management
+  - `devices` - Device management
+  - `node` - Individual node commands
+  - `approvals` - Approval management
+  - `hooks` - Hook management
+  - `plugins` - Plugin management
+    - Subcommands: list, info, install, enable, disable, doctor
+  - `dns` - DNS setup helper
+  - `docs` - Documentation search
+  - `skills` - List and inspect available skills
+    - Subcommands: list, info, check
+  - `directory` - Directory management
+  - `voicecall` - Voice call functionality (if plugin installed)
+
+- [] **Security and Auditing Commands**
+  - `security` - Security management and auditing
+    - Subcommands: audit with options (--deep, --fix)
+
+- [] **Global Flags and Features**
+  - `--dev` - Isolate state under ~/.openclaw-dev and shift default ports
+  - `--profile <name>` - Isolate state under ~/.openclaw-<<name>>
+  - `--no-color` - Disable ANSI colors
+  - `--update` - Shorthand for openclaw update (source installs only)
+  - `-V, --version, -v` - Print version and exit
+  - `--json` and `--plain` - Disable styling for clean output
+  - Progress indicators for long-running commands
+  - OSC-8 hyperlinks for supported terminals
+  - Color palette support (lobster palette)
+
+- [] **Chat Slash Commands Support**
+  - `/status` - Quick diagnostics
+  - `/config` - Persisted config changes
+  - `/debug` - Runtime-only config overrides (memory, not disk; requires commands.debug: true)
+
+**Manual test:** Test each major command category by running the command with --help flag to verify proper subcommand structure, then test core functionality with appropriate flags and options. Verify JSON output formats work correctly for programmatic usage, and ensure all global flags are properly implemented across commands.
+[] Fully Tested
