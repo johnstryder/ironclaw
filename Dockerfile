@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22-alpine AS build
+FROM golang:1.24-alpine AS build
 WORKDIR /app
 
 COPY go.mod go.sum* ./
@@ -18,5 +18,6 @@ RUN chown -R ironclaw:ironclaw /app
 
 USER ironclaw
 EXPOSE 8080
+LABEL org.opencontainers.image.source=https://github.com/johnstryder/ironclaw
 
 ENTRYPOINT ["./ironclaw"]
