@@ -18,6 +18,7 @@ type Config struct {
 	Mode            string        `json:"mode,omitempty"`  // Setup mode: "local", "server", "remote"
 	RemoteURL       string        `json:"remoteUrl,omitempty"`
 	RemoteToken     string        `json:"remoteToken,omitempty"`
+	Channels        []string      `json:"channels,omitempty"` // Enabled channels (e.g., telegram, discord)
 }
 
 // RetryConfig controls retry behaviour for external API calls (LLM, webhooks).
