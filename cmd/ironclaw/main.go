@@ -107,6 +107,91 @@ func newRootCommand(bm buildMeta) *cobra.Command {
 	secretsCmd.AddCommand(secretsSetCmd, secretsGetCmd, secretsDeleteCmd)
 	root.AddCommand(secretsCmd)
 
+	// Phase 12: Setup and Onboarding Commands
+	setupCmd := &cobra.Command{
+		Use:   "setup",
+		Short: "Initialize config and workspace",
+		RunE:  runSetup,
+	}
+	setupCmd.Flags().String("workspace", "", "Path to workspace directory")
+	setupCmd.Flags().Bool("wizard", false, "Run interactive wizard")
+	setupCmd.Flags().Bool("non-interactive", false, "Skip interactive prompts")
+	setupCmd.Flags().String("mode", "", "Setup mode: local, server, remote")
+	setupCmd.Flags().String("remote-url", "", "Remote API URL")
+	setupCmd.Flags().String("remote-token", "", "Remote authentication token")
+	root.AddCommand(setupCmd)
+
+	onboardCmd := &cobra.Command{
+		Use:   "onboard",
+		Short: "Interactive wizard for gateway, workspace, and skills setup",
+		RunE:  runOnboard,
+	}
+	onboardCmd.Flags().String("workspace", "", "Path to workspace directory")
+	onboardCmd.Flags().Bool("non-interactive", false, "Skip interactive prompts")
+	onboardCmd.Flags().Int("gateway-port", 0, "Gateway port number")
+	onboardCmd.Flags().String("gateway-auth", "", "Gateway auth mode: none, token, password")
+	onboardCmd.Flags().String("auth-token", "", "Auth token for gateway")
+	onboardCmd.Flags().String("default-model", "", "Default AI model")
+	onboardCmd.Flags().String("provider", "", "AI provider: openai, anthropic, local, ollama")
+	onboardCmd.Flags().StringSlice("skills", nil, "List of skills to enable")
+	root.AddCommand(onboardCmd)
+
+	configureCmd := &cobra.Command{
+		Use:   "configure",
+		Short: "Interactive configuration wizard for models, channels, skills, gateway",
+		RunE:  runConfigure,
+	}
+	configureCmd.Flags().String("workspace", "", "Path to workspace directory")
+	configureCmd.Flags().Bool("non-interactive", false, "Skip interactive prompts")
+	configureCmd.Flags().Int("gateway-port", 0, "Gateway port number")
+	configureCmd.Flags().String("gateway-auth", "", "Gateway auth mode: none, token, password")
+	configureCmd.Flags().String("default-model", "", "Default AI model")
+	configureCmd.Flags().String("provider", "", "AI provider: openai, anthropic, local, ollama")
+	configureCmd.Flags().StringSlice("channels", nil, "List of channels to configure")
+	configureCmd.Flags().StringSlice("skills", nil, "List of skills to enable")
+	root.AddCommand(configureCmd)
+
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Non-interactive config helpers (get/set/unset) with dot/bracket path support",
+	}
+	configGetCmd := &cobra.Command{
+		Use:   "get",
+		Short: "Get a config value by path",
+		RunE:  runConfigGet,
+		Args:  cobra.ExactArgs(1),
+	}
+	configGetCmd.Flags().String("workspace", "", "Path to workspace directory")
+	configSetCmd := &cobra.Command{
+		Use:   "set",
+		Short: "Set a config value by path",
+		RunE:  runConfigSet,
+		Args:  cobra.ExactArgs(2),
+	}
+	configSetCmd.Flags().String("workspace", "", "Path to workspace directory")
+	configUnsetCmd := &cobra.Command{
+		Use:   "unset",
+		Short: "Remove a config value by path",
+		RunE:  runConfigUnset,
+		Args:  cobra.ExactArgs(1),
+	}
+	configUnsetCmd.Flags().String("workspace", "", "Path to workspace directory")
+	configCmd.AddCommand(configGetCmd, configSetCmd, configUnsetCmd)
+	root.AddCommand(configCmd)
+
+	doctorCmd := &cobra.Command{
+		Use:   "doctor",
+		Short: "Health checks and quick fixes",
+		RunE:  runDoctor,
+	}
+	doctorCmd.Flags().String("workspace", "", "Path to workspace directory")
+	doctorCmd.Flags().Bool("no-workspace-suggestions", false, "Skip workspace suggestions")
+	doctorCmd.Flags().Bool("yes", false, "Auto-confirm fixes")
+	doctorCmd.Flags().Bool("non-interactive", false, "Skip interactive prompts")
+	doctorCmd.Flags().Bool("deep", false, "Perform deep diagnostic checks")
+	doctorCmd.Flags().Bool("fix", false, "Attempt to fix issues automatically")
+	root.AddCommand(doctorCmd)
+
 	return root
 }
 
@@ -183,6 +268,162 @@ func runSecretsDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return m.Delete(args[0])
+}
+
+// Phase 12: Setup and Onboarding command handlers
+func runSetup(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	wizard, _ := cmd.Flags().GetBool("wizard")
+	nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
+	mode, _ := cmd.Flags().GetString("mode")
+	remoteURL, _ := cmd.Flags().GetString("remote-url")
+	remoteToken, _ := cmd.Flags().GetString("remote-token")
+
+	opts := cli.SetupOptions{
+		Workspace:      workspace,
+		Wizard:         wizard,
+		NonInteractive: nonInteractive,
+		Mode:           mode,
+		RemoteURL:      remoteURL,
+		RemoteToken:    remoteToken,
+	}
+
+	code := cli.RunSetup(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runOnboard(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
+	gatewayPort, _ := cmd.Flags().GetInt("gateway-port")
+	gatewayAuth, _ := cmd.Flags().GetString("gateway-auth")
+	authToken, _ := cmd.Flags().GetString("auth-token")
+	defaultModel, _ := cmd.Flags().GetString("default-model")
+	provider, _ := cmd.Flags().GetString("provider")
+	skills, _ := cmd.Flags().GetStringSlice("skills")
+
+	opts := cli.OnboardOptions{
+		Workspace:      workspace,
+		NonInteractive: nonInteractive,
+		GatewayPort:    gatewayPort,
+		GatewayAuth:    gatewayAuth,
+		AuthToken:      authToken,
+		DefaultModel:   defaultModel,
+		Provider:       provider,
+		Skills:         skills,
+	}
+
+	code := cli.RunOnboard(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runConfigure(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
+	gatewayPort, _ := cmd.Flags().GetInt("gateway-port")
+	gatewayAuth, _ := cmd.Flags().GetString("gateway-auth")
+	defaultModel, _ := cmd.Flags().GetString("default-model")
+	provider, _ := cmd.Flags().GetString("provider")
+	channels, _ := cmd.Flags().GetStringSlice("channels")
+	skills, _ := cmd.Flags().GetStringSlice("skills")
+
+	opts := cli.ConfigureOptions{
+		Workspace:      workspace,
+		NonInteractive: nonInteractive,
+		GatewayPort:    gatewayPort,
+		GatewayAuth:    gatewayAuth,
+		DefaultModel:   defaultModel,
+		Provider:       provider,
+		Channels:       channels,
+		Skills:         skills,
+	}
+
+	code := cli.RunConfigure(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runConfigGet(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	path := args[0]
+
+	opts := cli.ConfigOptions{
+		Workspace: workspace,
+		Action:    "get",
+		Path:      path,
+	}
+
+	code := cli.RunConfig(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runConfigSet(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	path := args[0]
+	value := args[1]
+
+	opts := cli.ConfigOptions{
+		Workspace: workspace,
+		Action:    "set",
+		Path:      path,
+		Value:     value,
+	}
+
+	code := cli.RunConfig(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runConfigUnset(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	path := args[0]
+
+	opts := cli.ConfigOptions{
+		Workspace: workspace,
+		Action:    "unset",
+		Path:      path,
+	}
+
+	code := cli.RunConfig(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
+}
+
+func runDoctor(cmd *cobra.Command, args []string) error {
+	workspace, _ := cmd.Flags().GetString("workspace")
+	noWorkspaceSuggestions, _ := cmd.Flags().GetBool("no-workspace-suggestions")
+	nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
+	deep, _ := cmd.Flags().GetBool("deep")
+	fix, _ := cmd.Flags().GetBool("fix")
+
+	opts := cli.DoctorOptions{
+		Workspace:              workspace,
+		NoWorkspaceSuggestions: noWorkspaceSuggestions,
+		NonInteractive:         nonInteractive,
+		Deep:                   deep,
+		Fix:                    fix,
+	}
+
+	code := cli.RunDoctor(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+	if code != 0 {
+		return exitCodeErr(code)
+	}
+	return nil
 }
 
 // runDaemon runs the daemon loop. If shutdownCh is non-nil, it returns when shutdownCh is closed (for tests).
@@ -331,7 +572,8 @@ func getVersion() string {
 }
 
 // version is set at build time via ldflags for build metadata, e.g.:
-//   go build -ldflags "-X main.version=1.0.8" -o ironclaw ./cmd/ironclaw
+//
+//	go build -ldflags "-X main.version=1.0.8" -o ironclaw ./cmd/ironclaw
 var version string
 
 // daemonShutdownCh is set by tests to unblock runDaemon without signals. Production leaves it nil.
@@ -379,4 +621,3 @@ func runApp(args []string) int {
 	}
 	return 0
 }
-

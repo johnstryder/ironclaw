@@ -15,6 +15,9 @@ type Config struct {
 	Infra           InfraConfig   `json:"infra"`
 	Retry           RetryConfig   `json:"retry"`
 	AllowedCommands []string      `json:"allowedCommands"` // If non-empty, only these command binaries may be executed
+	Mode            string        `json:"mode,omitempty"`  // Setup mode: "local", "server", "remote"
+	RemoteURL       string        `json:"remoteUrl,omitempty"`
+	RemoteToken     string        `json:"remoteToken,omitempty"`
 }
 
 // RetryConfig controls retry behaviour for external API calls (LLM, webhooks).
@@ -26,9 +29,9 @@ type RetryConfig struct {
 }
 
 type GatewayConfig struct {
-	Port         int          `json:"port"`
-	Auth         AuthConfig   `json:"auth"`
-	AllowedHosts []string     `json:"allowedHosts"`
+	Port         int        `json:"port"`
+	Auth         AuthConfig `json:"auth"`
+	AllowedHosts []string   `json:"allowedHosts"`
 }
 
 type AuthConfig struct {
@@ -41,7 +44,7 @@ type AuthConfig struct {
 }
 
 type AgentsConfig struct {
-	Provider     string            `json:"provider"`     // "openai" | "anthropic" | "local"
+	Provider     string            `json:"provider"` // "openai" | "anthropic" | "local"
 	DefaultModel string            `json:"defaultModel"`
 	ModelAliases map[string]string `json:"modelAliases"`
 	Paths        AgentPaths        `json:"paths"`
@@ -50,7 +53,7 @@ type AgentsConfig struct {
 
 // FallbackConfig describes an alternative LLM provider for failover.
 type FallbackConfig struct {
-	Provider     string `json:"provider"`     // "openai" | "anthropic" | "local" | "ollama" | "gemini" | "openrouter"
+	Provider     string `json:"provider"` // "openai" | "anthropic" | "local" | "ollama" | "gemini" | "openrouter"
 	DefaultModel string `json:"defaultModel"`
 }
 
@@ -136,9 +139,9 @@ const (
 // Message is the canonical message type. RawContent holds JSON; ContentBlocks
 // is populated after UnmarshalJSON for polymorphic content (text, image, tool_use, tool_result).
 type Message struct {
-	ID   string      `json:"id"`
-	Role MessageRole `json:"role"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        string      `json:"id"`
+	Role      MessageRole `json:"role"`
+	Timestamp time.Time   `json:"timestamp"`
 
 	// Polymorphic content: string or []ContentBlock (stored as raw JSON)
 	RawContent json.RawMessage `json:"content"`
@@ -301,6 +304,6 @@ type ToolContext interface {
 type SemanticMemory struct {
 	ID        int64     `json:"id"`
 	Content   string    `json:"content"`
-	Score     float64   `json:"score"`     // cosine similarity (0-1)
+	Score     float64   `json:"score"` // cosine similarity (0-1)
 	CreatedAt time.Time `json:"createdAt"`
 }
